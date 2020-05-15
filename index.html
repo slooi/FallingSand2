@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Falling Sand2</title>
+        <style>
+            *, body{
+                padding: 0;
+                margin: 0;
+            }
+            canvas{
+                border: 1px dashed black;
+                image-rendering:pixelated;
+            }
+        </style>
+    </head>
+
+    <body>
+        <script type="shader" id="vsSource">
+            attribute vec2 a_Position;
+
+            varying vec2 v_TexCoord;
+
+
+            void main(){
+                v_TexCoord = a_Position;
+
+                gl_Position = vec4(a_Position,0,1);
+                //gl_PointSize = 1.0; // diameter
+            }
+        </script>
+
+        
+        <script type="shader" id="fsSource">
+            precision mediump float;
+
+            uniform sampler2D u_Tex;
+            uniform float u_FinalRender;
+            uniform float u_PixSize;
+            uniform vec2 u_InvRes;
+            uniform float u_Ran;
+            
+            varying vec2 v_TexCoord;
+                        
+            float rand(float noise){
+                return step(0.5,fract(sin(dot(v_TexCoord ,vec2(12.9898+noise,78.233+noise))) * 43758.5453));
+            }
+
+            void main(){
+                vec2 uvCoord = (1.0+v_TexCoord)*0.5;
+
+                float isTop = step(1.0-u_PixSize,gl_FragCoord.y*u_InvRes[1]);
+                float isBottom = 1.0-step(u_PixSize,gl_FragCoord.y*u_InvRes[1]);
+                float isLeft = 1.0-step(u_PixSize,gl_FragCoord.x*u_InvRes[0]);
+                float isRight = step(1.0-u_PixSize,gl_FragCoord.x*u_InvRes[0]);
+
+                if(u_FinalRender == 1.0) {
+                    vec4 center = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y));
+
+                    // NEXT COLORS
+                    // red
+                    float red = center.r;
+
+                    // green
+                    float green = center.g;
+
+                    // blue
+                    float blue = center.b;
+
+                    // alpha
+                    float alpha = center.a;
+
+                    // FINAL
+                    gl_FragColor = vec4(red,green,blue,1);
+                } else if (u_FinalRender == 0.0) {
+                    vec4 above = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y+u_PixSize));
+                    vec4 aboveAbove = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y+2.0*u_PixSize));
+                    vec4 below = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y-u_PixSize));
+                    vec4 right = texture2D(u_Tex,vec2(uvCoord.x+u_PixSize,uvCoord.y));
+                    vec4 left = texture2D(u_Tex,vec2(uvCoord.x-u_PixSize,uvCoord.y));
+                    vec4 topRight = texture2D(u_Tex,vec2(uvCoord.x+u_PixSize,uvCoord.y+u_PixSize));
+                    vec4 center = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y));
+
+                    // NEXT COLORS
+                    // red
+                    float red = 
+                        center.r // maintain persistence
+                        + above.r * (1.0-isTop) // add sand if old sand above and NOT very top
+                        - center.r * (1.0-isBottom) * (1.0-center.g) // deleted old spot if not touching bot or green
+                        + (1.0-center.r) * (right.b)
+                        - (1.0-left.r) * center.b
+                    ;
+
+                    // green
+                    float green = 
+                        isBottom  // bottom ALWAYS has green
+                        + (below.r * below.g)
+                    ;
+
+                    // blue
+                    float blue = 
+                        rand(u_Ran) * center.r * above.g * (1.0-above.r) * (1.0-aboveAbove.r)    // A red block with green on top (stable) without a top block, times by u_Ran make blue
+                    ;
+
+                    // alpha
+                    float alpha = center.a;
+
+                    // FINAL
+                    gl_FragColor = vec4(red,green,blue,alpha);
+                } else {
+                    gl_FragColor = vec4(1,0,0,1);
+                }
+            }
+        </script>
+
+
+        <script src="webgl.js"></script>
+    </body>
+
+</html>
