@@ -8,7 +8,7 @@ const fsSource = document.getElementById('fsSource').innerText
 
 // canvas
 const canvas = document.createElement('canvas')
-canvas.width = 300
+canvas.width = 1000
 canvas.height = canvas.width
 document.body.append(canvas)
 
@@ -109,17 +109,18 @@ let pairCounter = 0
 function eachFrame(){
     // gl.clear(gl.COLOR_BUFFER_BIT)
 
-
-    // update swapped texture
-    switchPair()
-    gl.uniform1f(uniformLoc.u_FinalRender,0)
-    gl.uniform1f(uniformLoc.u_Ran,Math.random())
-    gl.drawArrays(gl.TRIANGLES,0,data.length/2)
-
-    // real render
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null)
-    gl.uniform1f(uniformLoc.u_FinalRender,1)
-    gl.drawArrays(gl.TRIANGLES,0,data.length/2)
+    for(let i=0;i<10;i++){
+        // update swapped texture
+        switchPair()
+        gl.uniform1f(uniformLoc.u_FinalRender,0)
+        gl.uniform1f(uniformLoc.u_Ran,Math.random())
+        gl.drawArrays(gl.TRIANGLES,0,data.length/2)
+    
+        // real render
+        gl.bindFramebuffer(gl.FRAMEBUFFER,null)
+        gl.uniform1f(uniformLoc.u_FinalRender,1)
+        gl.drawArrays(gl.TRIANGLES,0,data.length/2)
+    }
 }
 
 

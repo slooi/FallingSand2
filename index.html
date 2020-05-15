@@ -72,7 +72,7 @@
                     float alpha = center.a;
 
                     // FINAL
-                    gl_FragColor = vec4(red,green,blue,1);
+                    gl_FragColor = vec4(red,green,blue,step(0.1,alpha)+0.3);
                 } else if (u_FinalRender == 0.0) {
                     vec4 above = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y+u_PixSize));
                     vec4 aboveAbove = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y+2.0*u_PixSize));
@@ -88,8 +88,10 @@
                         center.r // maintain persistence
                         + above.r * (1.0-isTop) // add sand if old sand above and NOT very top
                         - center.r * (1.0-isBottom) * (1.0-center.g) // deleted old spot if not touching bot or green
-                        + (1.0-center.r) * (right.b)
-                        - (1.0-left.r) * center.b
+                        + (1.0-center.r) * (right.b) * (1.0-isRight)
+                        - (1.0-left.r) * center.b * (1.0-isRight)
+                        + (1.0-center.r) * (left.a) * (1.0-isLeft)
+                        - (1.0-right.r) * center.a * (1.0-isLeft)
                     ;
 
                     // green
@@ -98,18 +100,24 @@
                         + (below.r * below.g)
                     ;
 
+
+                    float stable = center.r * above.g * (1.0-above.r) * (1.0-aboveAbove.r);
+                    float ranNum = rand(u_Ran);
+
                     // blue
                     float blue = 
-                        rand(u_Ran) * center.r * above.g * (1.0-above.r) * (1.0-aboveAbove.r)    // A red block with green on top (stable) without a top block, times by u_Ran make blue
+                        ranNum * stable * (1.0-center.a);    // A red block with green on top (stable) without a top block, times by u_Ran make blue
                     ;
 
                     // alpha
-                    float alpha = center.a;
+                    float alpha = 
+                        (1.0 - ranNum) * stable;
+                    ;
 
                     // FINAL
                     gl_FragColor = vec4(red,green,blue,alpha);
                 } else {
-                    gl_FragColor = vec4(1,0,0,1);
+                    gl_FragColor = vec4(1,0,0,0);
                 }
             }
         </script>
