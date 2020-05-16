@@ -8,7 +8,7 @@ const fsSource = document.getElementById('fsSource').innerText
 
 // canvas
 const canvas = document.createElement('canvas')
-canvas.width = 1000
+canvas.width = 800
 canvas.height = canvas.width
 document.body.append(canvas)
 
@@ -98,7 +98,7 @@ gl.uniform1f(uniformLoc.u_Ran,Math.round(Math.random()))
 
 
 let oldDate = new Date()
-const fps = 40
+const fps = 60
 let finalDraw = 0
 let pairCounter = 0
 
@@ -109,7 +109,6 @@ let pairCounter = 0
 function eachFrame(){
     // gl.clear(gl.COLOR_BUFFER_BIT)
 
-    for(let i=0;i<10;i++){
         // update swapped texture
         switchPair()
         gl.uniform1f(uniformLoc.u_FinalRender,0)
@@ -120,7 +119,6 @@ function eachFrame(){
         gl.bindFramebuffer(gl.FRAMEBUFFER,null)
         gl.uniform1f(uniformLoc.u_FinalRender,1)
         gl.drawArrays(gl.TRIANGLES,0,data.length/2)
-    }
 }
 
 
@@ -129,12 +127,13 @@ const mouse = {
     y:0,
     down:0
 }
+let penSize = 50
 loop()
 function loop(){
-    if(new Date()-oldDate>1000/fps){
+    // if(new Date()-oldDate>1000/fps){
         eachFrame()
-        oldDate = new Date()
-    }
+    //     oldDate = new Date()
+    // }
 
     if(mouse.down)
         addSand()
@@ -146,6 +145,37 @@ function loop(){
 
 
 // OTHER FUNCTIONS 
+window.addEventListener('keydown',e=>{
+    const code = e.code
+    const key = e.key
+    if(code === "Digit1")
+        penSize = 0.5
+    if(code === "Digit2")
+        penSize = 1
+    if(code === "Digit3")
+        penSize = 3
+    if(code === "Digit4")
+        penSize = 5
+    if(code === "Digit5")
+        penSize = 10
+    if(code === "Digit6")
+        penSize = 20
+    if(code === "Digit7")
+        penSize = 30
+    if(code === "Digit8")
+        penSize = 50
+    if(code === "Digit9")
+        penSize = 80
+    if(code === "Digit0")
+        penSize = 100        
+    if(code === "Minus")
+        penSize *= 0.8
+    if(code === "Equal")
+        penSize *= 1.2
+        
+})
+
+
 canvas.addEventListener('mousedown',e=>{
     processMouseDown(e)
     mouse.down = 1
@@ -178,15 +208,24 @@ function relativeValues(val){
 function canvasValues(val){
     return val
 }
+function createSquare(){
+    return [
+        mouse.x,mouse.y,
+        mouse.x+canvas.width/50000*penSize,mouse.y,
+        mouse.x+canvas.width/50000*penSize,mouse.y+canvas.height/50000*penSize,
+        mouse.x+canvas.width/50000*penSize,mouse.y+canvas.height/50000*penSize,
+        mouse.x,mouse.y+canvas.height/50000*penSize,
+        mouse.x,mouse.y,
+    ]
+}
+
 function addSand(){
     // clear quad data
     data.length = 0
 
     // add user sand data
     data.push(
-        mouse.x,mouse.y,
-        mouse.x+50/canvas.width,mouse.y+50/canvas.height,
-        mouse.x+50/canvas.width,mouse.y
+        ...createSquare()
     )
     // data.push(0,0,0.5,0,0.6,0.9)
     // data.push(0,0,1,0,1,1)

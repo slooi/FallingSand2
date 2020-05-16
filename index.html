@@ -43,9 +43,22 @@
             
             varying vec2 v_TexCoord;
                         
-            float rand(float noise){
-                return step(0.5,fract(sin(dot(v_TexCoord ,vec2(12.9898+noise,78.233+noise))) * 43758.5453));
+            float rand1(float noise){
+                // return step(0.5,fract(sin(dot(v_TexCoord ,vec2(12.9898+noise,78.233+noise))) * 43758.5453));
+
+                return fract(sin(noise+v_TexCoord.x+v_TexCoord.y*noise) * 43758.5453123);
             }
+            
+            float rand2(float noise){
+                // return step(0.5,fract(sin(dot(v_TexCoord ,vec2(12.9898+noise,78.233+noise))) * 43758.5453));
+
+                return fract(cos(noise) * 43758.5453123);
+            }
+
+            float rand(float noise){
+                return step(0.5,fract(100.0*(rand1(noise)+rand2(noise))));
+            }
+            
 
             void main(){
                 vec2 uvCoord = (1.0+v_TexCoord)*0.5;
@@ -55,7 +68,13 @@
                 float isLeft = 1.0-step(u_PixSize,gl_FragCoord.x*u_InvRes[0]);
                 float isRight = step(1.0-u_PixSize,gl_FragCoord.x*u_InvRes[0]);
 
-                if(u_FinalRender == 1.0) {
+
+                // 0.1 debug
+                // 0.5 draw on texture
+                // 0.0 sim
+                // 1.0 final
+                if(u_FinalRender == 0.1) {
+                    // debug mode
                     vec4 center = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y));
 
                     // NEXT COLORS
@@ -74,6 +93,8 @@
                     // FINAL
                     gl_FragColor = vec4(red,green,blue,step(0.1,alpha)+0.3);
                 } else if (u_FinalRender == 0.0) {
+                    // simulation mode
+                    
                     vec4 above = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y+u_PixSize));
                     vec4 aboveAbove = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y+2.0*u_PixSize));
                     vec4 below = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y-u_PixSize));
@@ -81,6 +102,8 @@
                     vec4 left = texture2D(u_Tex,vec2(uvCoord.x-u_PixSize,uvCoord.y));
                     vec4 topRight = texture2D(u_Tex,vec2(uvCoord.x+u_PixSize,uvCoord.y+u_PixSize));
                     vec4 center = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y));
+                    vec4 rightRight = texture2D(u_Tex,vec2(uvCoord.x+u_PixSize*2.0,uvCoord.y));
+                    vec4 leftLeft = texture2D(u_Tex,vec2(uvCoord.x-u_PixSize*2.0,uvCoord.y));
 
                     // NEXT COLORS
                     // red
@@ -88,10 +111,10 @@
                         center.r // maintain persistence
                         + above.r * (1.0-isTop) // add sand if old sand above and NOT very top
                         - center.r * (1.0-isBottom) * (1.0-center.g) // deleted old spot if not touching bot or green
-                        + (1.0-center.r) * (right.b) * (1.0-isRight)
-                        - (1.0-left.r) * center.b * (1.0-isRight)
-                        + (1.0-center.r) * (left.a) * (1.0-isLeft)
-                        - (1.0-right.r) * center.a * (1.0-isLeft)
+                        + (1.0-center.r) * (right.b * right.r)
+                        - (1.0-left.r) * center.b * center.r
+                        + (1.0-center.r) * (left.a  * left.r)
+                        - (1.0-right.r) * center.a * center.r
                     ;
 
                     // green
@@ -106,17 +129,37 @@
 
                     // blue
                     float blue = 
-                        ranNum * stable * (1.0-center.a);    // A red block with green on top (stable) without a top block, times by u_Ran make blue
+                        ranNum * stable * (1.0-center.a) * (1.0-isLeft) * (1.0-leftLeft.a);    // A red block with green on top (stable) without a top block, times by u_Ran make blue
                     ;
 
-                    // alpha
+                    // alpha  MOVE PIXEL TO RIGHT
                     float alpha = 
-                        (1.0 - ranNum) * stable;
+                        (1.0 - ranNum) * stable * (1.0-center.b) * (1.0-isRight) * (1.0-rightRight.b);
                     ;
 
                     // FINAL
                     gl_FragColor = vec4(red,green,blue,alpha);
-                } else {
+                } else if(u_FinalRender == 1.0){
+                    // Final render
+                    vec4 center = texture2D(u_Tex,vec2(uvCoord.x,uvCoord.y));
+
+                    // NEXT COLORS
+                    // red
+                    float red = center.r;
+
+                    // green
+                    float green = center.g;
+
+                    // blue
+                    float blue = center.b;
+
+                    // alpha
+                    float alpha = center.a;
+
+                    // FINAL
+                    gl_FragColor = vec4(red,green,blue,1);
+                } else{
+                    // when drawing on texture
                     gl_FragColor = vec4(1,0,0,0);
                 }
             }
