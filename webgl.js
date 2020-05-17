@@ -1,5 +1,9 @@
 console.log('webgl.js loaded')
 
+const fps = 10
+let debugMode = .2   // 0.1 or 0.2 // 1 final
+const upscale = 2
+let penType = -2    // -1 => sand, -2 => rock
 
 // shader source
 const vsSource = document.getElementById('vsSource').innerText
@@ -8,9 +12,12 @@ const fsSource = document.getElementById('fsSource').innerText
 
 // canvas
 const canvas = document.createElement('canvas')
-canvas.width = 100
+canvas.width = 2000
 canvas.height = canvas.width
 document.body.append(canvas)
+
+canvas.style.width = canvas.width*upscale + 'px'
+canvas.style.height = canvas.height*upscale + 'px'
 
 // gl
 let gl = canvas.getContext('webgl',{antialias:false})
@@ -98,7 +105,6 @@ gl.uniform1f(uniformLoc.u_Ran,Math.round(Math.random()))
 
 
 let oldDate = new Date()
-const fps = 60
 let finalDraw = 0
 let pairCounter = 0
 
@@ -114,10 +120,12 @@ function eachFrame(){
         gl.uniform1f(uniformLoc.u_FinalRender,0)
         gl.uniform1f(uniformLoc.u_Ran,Math.random())
         gl.drawArrays(gl.TRIANGLES,0,data.length/2)
+        
+        // readData()
     
         // real render
         gl.bindFramebuffer(gl.FRAMEBUFFER,null)
-        gl.uniform1f(uniformLoc.u_FinalRender,1)
+        gl.uniform1f(uniformLoc.u_FinalRender,debugMode)    // debug mode?
         gl.drawArrays(gl.TRIANGLES,0,data.length/2)
 }
 
@@ -127,7 +135,7 @@ const mouse = {
     y:0,
     down:0
 }
-let penSize = 50
+let penSize = 1000
 loop()
 function loop(){
     // if(new Date()-oldDate>1000/fps){
@@ -175,7 +183,13 @@ window.addEventListener('keydown',e=>{
     }
     if(code === "Equal")
         penSize *= 1.2
-        
+    if(code === "KeyQ")
+        penType = -1
+    if(code === "KeyW")
+        penType =-2
+    if(code === "KeyE")
+        penType =-3
+
 })
 
 
@@ -212,19 +226,19 @@ function processMouseDown(e,touches){
         x= touches.pageX
         y= touches.pageY
     }
-    mouse.x = (relativeValues(x)-canvas.width/2)/canvas.width*2
-    mouse.y = (-relativeValues(y)+canvas.height/2)/canvas.height*2
+    mouse.x = ((relativeValues(x)-canvas.width*upscale/2)/canvas.width*2)/upscale  
+    mouse.y = ((-relativeValues(y)+canvas.height*upscale/2)/canvas.height*2)/upscale
     // console.log('2 offsetX',mouse.x)
     // console.log('2 offsetY',mouse.y)
 }
 function relativeValues(val){
-    if(val>=0 && val<canvas.width){
+    if(val>=0 && val<canvas.width*upscale){
         return val
     }else if(val<0){
         return 0
     }else{
-        return canvas.width-1
-    }
+        return canvas.width*upscale-1
+    }   
 }
 function canvasValues(val){
     return val
@@ -253,7 +267,7 @@ function addSand(){
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW)
 
     // change drawType
-    gl.uniform1f(uniformLoc.u_FinalRender,0.5)
+    gl.uniform1f(uniformLoc.u_FinalRender,penType)
     
     // bind & draw
     bindPair()
@@ -300,7 +314,14 @@ function switchPair(){
 function readData(){
     const dataView = new Uint8Array(canvas.width*canvas.height*4)
     gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,dataView)
-    console.log(dataView)
+    // console.log(dataView)
+    let numOfRed = 0
+    for(let i=0;i<dataView.length;i+=4){
+        if(dataView[i] === 255){
+            numOfRed++
+        }
+    }
+    console.log(numOfRed)
 }
 
 function addTextureData(texture,textureData){
@@ -317,6 +338,18 @@ function buildTextureData(type){
             textureData[y*canvas.width*4+x*4+1] = 0
             textureData[y*canvas.width*4+x*4+2] = 0
             textureData[y*canvas.width*4+x*4+3] = 0
+            // if(y===2){
+            //     textureData[y*canvas.width*4+x*4+1] = 255
+            // }
+            // if(y===4 && x===3){
+            //     textureData[y*canvas.width*4+x*4+1] = 255
+            // }
+            // if(y===3 && x===4){
+            //     textureData[y*canvas.width*4+x*4+1] = 255
+            // }
+            // if(y===3 && x===5){
+            //     textureData[y*canvas.width*4+x*4+1] = 255
+            // }
             // if(y===0){
             //     // green floor
             //     textureData[y*canvas.width*4+x*4+0] = 0
