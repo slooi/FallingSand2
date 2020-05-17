@@ -168,13 +168,30 @@ window.addEventListener('keydown',e=>{
         penSize = 80
     if(code === "Digit0")
         penSize = 100        
-    if(code === "Minus")
-        penSize *= 0.8
+    if(code === "Minus"){
+        if(canvas.height/50000*penSize*0.8>=1/canvas.height){
+            penSize *= 0.8
+        }
+    }
     if(code === "Equal")
         penSize *= 1.2
         
 })
 
+
+canvas.addEventListener("touchmove", e=>{
+    processMouseDown(e,e.touches[0])
+    mouse.down = 1
+}, false);
+canvas.addEventListener("touchstart", e=>{
+    processMouseDown(e,e.touches[0])
+    mouse.down = 1
+}, false);
+canvas.addEventListener("touchend", e=>{
+    
+    processMouseDown(e)
+    mouse.down = 0
+}, false);
 
 canvas.addEventListener('mousedown',e=>{
     processMouseDown(e)
@@ -188,9 +205,13 @@ canvas.addEventListener('mousemove',e=>{
     processMouseDown(e)
 })
 
-function processMouseDown(e){
-    const x=e.offsetX
-    const y=e.offsetY
+function processMouseDown(e,touches){
+    let x= e.offsetX
+    let y= e.offsetY
+    if(touches){
+        x= touches.pageX
+        y= touches.pageY
+    }
     mouse.x = (relativeValues(x)-canvas.width/2)/canvas.width*2
     mouse.y = (-relativeValues(y)+canvas.height/2)/canvas.height*2
     // console.log('2 offsetX',mouse.x)
