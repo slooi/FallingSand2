@@ -8,7 +8,7 @@ const fsSource = document.getElementById('fsSource').innerText
 
 // canvas
 const canvas = document.createElement('canvas')
-canvas.width = 32
+canvas.width = 3000
 canvas.height = canvas.width
 document.body.append(canvas)
 
