@@ -111,10 +111,10 @@
                         center.r // maintain persistence
                         + above.r * (1.0-isTop) // add sand if old sand above and NOT very top
                         - center.r * (1.0-isBottom) * (1.0-center.g) // deleted old spot if not touching bot or green
-                        + (1.0-center.r) * (right.b * right.r)
-                        - (1.0-left.r) * center.b * center.r
-                        + (1.0-center.r) * (left.a  * left.r)
-                        - (1.0-right.r) * center.a * center.r
+                        + (1.0-center.r) * (right.b * right.r) * (1.0-left.a)
+                        - (1.0-left.r) * center.b * center.r * (1.0-leftLeft.a)
+                        + (1.0-center.r) * (left.a  * left.r) * (1.0-right.b)
+                        - (1.0-right.r) * center.a * center.r * (1.0-rightRight.b)
                     ;
 
                     // green
