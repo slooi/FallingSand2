@@ -124,7 +124,7 @@
                     ;
 
 
-                    float stable = center.r * above.g * (1.0-above.r) * (1.0-aboveAbove.r);
+                    float stable = center.r * below.r * (1.0-above.r) * (1.0-aboveAbove.r); // used to be: center.r * above.g * (1.0-above.r) * (1.0-aboveAbove.r);
                     float ranNum = rand(u_Ran);
 
                     // blue
